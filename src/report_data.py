@@ -26,8 +26,6 @@ def analytics(local: str = None, name_file: str = None):
     return df
 
 
-
-
 def weight_evolution_curve(dataframe: pd.DataFrame, column_name: str, local: str, name_file: str) -> plt.Figure:
     df = dataframe
     df['Data'] = pd.to_datetime(df['Data'])
@@ -120,6 +118,15 @@ def comparative_muscle_left_and_right(left_name: str=None, right_name: str=None,
     plt.close()
 
 
+df = pd.read_excel(dados_file / 'avaliacao_fisica.xlsx', sheet_name="unpivot_for_valueInRow")
+df = df[df['Ano_Mes'] == "2023-09"]
+df
+
+
+var_peso = df[df['Musculo'] == "Peso"]["Valores"]
+print(f"Peso Atual:   {var_peso} kg")
+
+#%%
 
 if __name__ == "__main__":
     df = read_data()
