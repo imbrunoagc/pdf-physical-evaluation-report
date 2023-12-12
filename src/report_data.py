@@ -1,3 +1,4 @@
+"""modulo de gerar visoes necessárias para a análise de resultados físico."""
 #%%
 import pandas as pd
 from pathlib import Path
@@ -12,47 +13,17 @@ from matplotlib.backends.backend_pdf import PdfPages
 dados_file = Path() / '..' / 'dados'
 dir_figures = Path() / 'figures'
 
-df = pd.read_excel(dados_file / 'avaliacao_fisica.xlsx')
+def read_data(name: str='raw_data') -> pd.DataFrame:
+    df = pd.read_excel(dados_file / 'avaliacao_fisica.xlsx', sheet_name=name)
+    return df
 
-def analytics(dataframe: pd.DataFrame, local: str, name_file: str) -> plt.Figure:
-    df = dataframe
-    #df['Data'] = pd.to_datetime(df['Data'])
-    #df['Ano_Mes'] = df['Data'].dt.to_period('M')
+df = read_data()
 
-    # Converter Ano_Mes em strings no formato desejado (por exemplo, "2022-01")
-    #df['Ano_Mes'] = df['Ano_Mes'].dt.strftime('%Y-%m')
+def analytics(local: str = None, name_file: str = None):
 
-    colunas = df.columns[1:]
+    df = read_data(name='unpivot_for_valueInRow')
 
-    # Realizar o "unpivot" das colunas
-    df = df.melt(id_vars=['Data'], value_vars=colunas, var_name='Musculo', value_name='Valores')
-
-    # Sistema de Grids
-
-    # Cor Fundo de Fundo
-    #Cor_Fundo = '#f5f5f5'
-
-    # Criar o sistema de Grids
-    Grid_Graficos = sns.FacetGrid( df, col='Musculo', hue='Musculo', col_wrap=4 )
-
-    # Adicionar grafico linhas em cada gráfico
-    Grid_Graficos = Grid_Graficos.map( plt.plot, 'Data', 'Valores')
-
-    # Adiconar uma sombra + Ajuste do titulo
-    #Grid_Graficos = Grid_Graficos.map( plt.fill_between,  'Data', 'Valores', alpha=0.2).set_titles('{col_name} Musculo')
-
-    # Filtrar o titulo
-    Grid_Graficos = Grid_Graficos.set_titles('{col_name}')
-
-    # Adicionar um subtitulo
-    Grid_Graficos = Grid_Graficos.fig.suptitle(
-        'Acompanhamento temporal dos musculos \n Autor @bruno.cardoso',
-        fontsize=18
-    )
-
-    # Ajustando
-    plt.subplots_adjust( top=0.92 )
-    plt.savefig(fname=f'{local}/{name_file}.png', dpi=300, format=None)
+    return df
 
 
 
@@ -91,22 +62,12 @@ def weight_evolution_curve(dataframe: pd.DataFrame, column_name: str, local: str
     plt.close()  # Fecha a figura para liberar recursos
 
 
-def transpor_Table(dataframe: pd.DataFrame, local: str, name_file: str) -> plt.Figure:
+
+
+def Table(local: str=None, name_file: str=None) -> plt.Figure:
     """Realizar mudança na estrutura da tabela original extraída dos documentos .png"""
     
-    data = dataframe
-
-    df['Data'] = pd.to_datetime(df['Data'], format='%Y-%m-%d %H:%M:%S').dt.strftime('%Y-%m-%d')
-    # Transpor o DataFrame, de colunas para linhas
-    data = data.T
-
-    # Definir a primeira linha como o cabeçalho
-    new_header = data.iloc[0]
-    data = data[1:]
-    data.columns = new_header
-
-    # Remover a linha de Ano-Mes
-    data = data.drop(data.index[-1])
+    data = read_data(name='data_for_date')
 
     # Criar a figura e o eixo
     fig, ax = plt.subplots(figsize=(10, 8)) # Ajuste de largura e altura
@@ -120,16 +81,52 @@ def transpor_Table(dataframe: pd.DataFrame, local: str, name_file: str) -> plt.F
     tab.set_fontsize(8)
     tab.scale(1.5, 1.5)
 
-    # Salvar a figuara em .pnh
+    # Salvar a figuara em .png
     plt.savefig(fname=f'{local}/{name_file}.png', dpi='figure', format=None) # dpi['figure']: Para trabalhar como figura, para retorno original dpi=100
     plt.close()  # Fecha a figura para liberar recursos
 
 
+
+
+def comparative_muscle_left_and_right(left_name: str=None, right_name: str=None, local: str=None, name_file: str=None) -> plt.Figure:
+    
+    df = read_data(name='unpivot_for_valueInRow')
+
+    esquerdo = df[df['Musculo'] == left_name]
+    direito = df[df['Musculo'] == right_name]
+
+    # Combine o nome do músculo com o valor
+    esquerdo['Musculo-Valor'] = esquerdo['Musculo'] + ' ' + esquerdo['Valores'].astype(str)
+    direito['Musculo-Valor'] = direito['Musculo'] + ' ' + direito['Valores'].astype(str)
+
+    # Classifique os DataFrames com base na nova coluna
+    esquerdo = esquerdo.sort_values(by='Musculo-Valor')
+    direito = direito.sort_values(by='Musculo-Valor')
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(esquerdo['Ano_Mes'], esquerdo['Valores'], marker='o', label=left_name)
+    plt.plot(direito['Ano_Mes'], direito['Valores'], marker='o', label=right_name)
+
+    plt.xlabel('Ano_Mes')
+    plt.ylabel('Valores')
+    plt.title(f'Comparativo de {left_name} e {right_name}')
+    plt.xticks(rotation=45)
+    plt.legend()
+
+    plt.tight_layout()
+
+    # Salvar a figura em .png
+    plt.savefig(fname=f'{local}/{name_file}.png', dpi=300, format='png')
+    plt.close()
+
+
+
 if __name__ == "__main__":
-    df = pd.read_excel(dados_file / 'avaliacao_fisica.xlsx')
+    df = read_data()
 
+    #fig1 = analytics(dataframe=df,local=dir_figures, name_file='figGride')
+    fig2 = weight_evolution_curve(dataframe=df, column_name='Peso', local=dir_figures, name_file='fig_evolucaoPeso')
+    fig3 = Table(local=dir_figures, name_file='fig_table')
+    fig4 = comparative_muscle_left_and_right(left_name='Antebraco_Esq', right_name='Antebrago_Dir', local=dir_figures, name_file='fig_compAntebraco')
 
-    fig1 = analytics(dataframe=df,local=dir_figures, name_file='figGride')
-    fig2 = weight_evolution_curve(dataframe=df, column_name='Peso', local=dir_figures, name_file='fig1')
-    fig3 = transpor_Table(dataframe=df, local=dir_figures, name_file='fig2')
 # %%
