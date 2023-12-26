@@ -6,6 +6,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+from report_utils import classificar_composicao_corporal
 from pandas.plotting import table
 
 from matplotlib.backends.backend_pdf import PdfPages
@@ -118,15 +119,84 @@ def comparative_muscle_left_and_right(left_name: str=None, right_name: str=None,
     plt.close()
 
 
+def circleMassaMagraXGorda(local: str, name_file: str, massaMagra: float, massaGorda: float): 
+    # Rótulos para as fatias
+    rotulos = ['Massa Magra', 'Massa Gorda']
+
+    # explosão da parte desejada
+    explode = [0, 0.1]
+
+    fig1, ax1 = plt.subplots(figsize=(6,6))
+
+    # setando cores dos pedações
+    cores = ["#3CB371", "#ADFF2F"]
+
+    # Construção da visão gráfica
+    ax1.pie([massaMagra, massaGorda], explode=explode, labels=rotulos, autopct='%1.1f',
+            shadow=True, startangle=90, colors=cores)
+
+    ax1.axis('equal')
+    plt.savefig(fname=f'{local}/{name_file}.png', dpi=300, format='png')
+
+
+###########################################
 df = pd.read_excel(dados_file / 'avaliacao_fisica.xlsx', sheet_name="unpivot_for_valueInRow")
 df = df[df['Ano_Mes'] == "2023-09"]
-df
+
+###########################################
+
+var_peso = df[df['Musculo'] == "Peso"]["Valores"].values[0]
+
+###########################################
+
+var_altura = df[df['Musculo'] == "Altura"]["Valores"].values[0]
+
+###########################################
+
+indice_linha_IMC = df[df['Musculo'] == "IMC"].index[0]
+var_IMC = df.loc[indice_linha_IMC, "Valores"]
+
+var_IMC = float(var_IMC)  # Convertendo para float, se necessário
+cls_imc = classificar_composicao_corporal("IMC", var_IMC)
+text_IMC = f"{var_IMC} - {cls_imc}"
+
+###########################################
+
+var_peitoral = df[df["Musculo"] == "DC_Peitoral"]["Valores"].values[0]
+
+var_abdominal = df[df["Musculo"] == "DC_Abdominal"]["Valores"].values[0]
+
+var_coxa = df[df["Musculo"] == "DC_Coxa"]["Valores"].values[0]
 
 
-var_peso = df[df['Musculo'] == "Peso"]["Valores"]
-print(f"Peso Atual:   {var_peso} kg")
+###########################################
 
-#%%
+porcentage_gordura_ideal = 14.00
+text_gorduraIdeal = f"% Gordura ideal: {porcentage_gordura_ideal}%"
+###########################################
+
+indice_porcentagemGordura = df[df["Musculo"] == "%_Gordura"].index[0]
+var_porcentagem_gordura = df.loc[indice_porcentagemGordura, "Valores"]
+
+var_porcentagem_gordura = var_porcentagem_gordura.replace("%","")
+var_porcentagem_gordura = float(var_porcentagem_gordura)
+cls_porcentagem_gordura = classificar_composicao_corporal(musculo="%_Gordura", valor=var_porcentagem_gordura)
+
+###########################################
+
+indice_massaMagra = df[df["Musculo"] == "Massa_Magra"].index[0]
+var_massaMagra = df.loc[indice_massaMagra, "Valores"]
+
+var_massaMagra = float(var_massaMagra)
+cls_massaMagra = classificar_composicao_corporal(musculo="Massa_Magra", valor=var_massaMagra)
+
+###########################################
+
+indice_massaGorda = df[df["Musculo"] == "Massa_Gorda"].index[0]
+var_massaGorda = df.loc[indice_massaGorda, "Valores"]
+
+var_massaGorda = float(var_massaGorda)
+cls_massaGorda = classificar_composicao_corporal(musculo="Massa_Gorda", valor=var_massaGorda)
 
 if __name__ == "__main__":
     df = read_data()
@@ -135,5 +205,5 @@ if __name__ == "__main__":
     fig2 = weight_evolution_curve(dataframe=df, column_name='Peso', local=dir_figures, name_file='fig_evolucaoPeso')
     fig3 = Table(local=dir_figures, name_file='fig_table')
     fig4 = comparative_muscle_left_and_right(left_name='Antebraco_Esq', right_name='Antebrago_Dir', local=dir_figures, name_file='fig_compAntebraco')
-
+    fig5_circleMG = circleMassaMagraXGorda(local=dir_figures, name_file='fig_circleMassa_Magra_Gorda', massaMagra=var_massaMagra, massaGorda=var_massaGorda)
 # %%
