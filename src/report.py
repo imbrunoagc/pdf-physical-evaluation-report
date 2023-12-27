@@ -5,6 +5,7 @@ import pandas as pd
 from pathlib import Path
 from datetime import datetime
 
+from report_data import var_peso, var_altura, var_abdominal, var_coxa, text_IMC, var_peitoral, var_porcentagem_gordura, porcentage_gordura_ideal, var_massaMagra, var_massaGorda
 dir_figures = Path() / 'figures'
 dados_file = Path() / '..' / 'dados'
 
@@ -44,34 +45,51 @@ def create_first_page(pdf, date=DATE):
 def create_second_page(pdf, data):
     # Criar uma nova página
     pdf.add_page()
-    
-    # Configurar a cor de preenchimento RGB para a barra
-    pdf.set_fill_color(65, 138, 179)
-    
-    # Desenhar a barra na parte superior da página (tamanho da folha A4)
-    pdf.rect(0, 0, 210, 20, 'F')  # Retângulo que inicia no canto superior esquerdo
-    
-    # Configurar a fonte para o título
-    pdf.set_font('Arial', 'B', 22)
-    pdf.set_text_color(255, 255, 255)  # Configurar a cor do texto para branco
-    pdf.cell(w=90, h=8, txt='Dados Pessoais', align='C', ln=True)
-    
-    nome = 'Bruno'
-    idade = 22
-    
-    
-    pdf.set_font('Arial', '', 12)
-    pdf.set_text_color(0, 0, 0)  # Configurar a cor do texto de volta para preto
 
-    # Célula "Nome" à esquerda
-    pdf.cell(w=30, h=30, txt=f'Nome: {nome}', align='L', ln=False)
+    # Adicionar imagem como fundo
+    image_path_background = Path() / '..' / 'documentos' / 'modelo_branco.png'
+    pdf.image(str(image_path_background), x=2.5, y=0, w=WIDTH-5, h=HEIGHT-5)
 
-    # Célula "Idade" à direita
-    pdf.cell(w=0, h=30, txt=f'Idade: {idade}', align='C', ln=False)  # ln=False para evitar quebra de linha
+    pdf.set_font('Arial', 'B', 12)
+
+    pdf.ln(3)
+
+    pdf.cell(w=50, h=5, txt=f'{var_peso}', align="C", ln=1)
+    pdf.ln(3)
+    pdf.cell(w=50, h=5, txt=f'{var_altura}', align="C")
 
 
+    pdf.set_xy(78, 17.5)
+    pdf.cell(w=50, h=5, txt=f'{text_IMC}', align='C', ln=1)    
 
-def create_report(date=DATE, filename='report.pdf'):
+
+    pdf.set_xy(10, 77.5)
+    pdf.cell(w=50, h=5, txt=f'{var_peitoral}', align='C', ln=1)    
+    pdf.ln(2)
+    
+    pdf.cell(w=50, h=5, txt=f'{var_abdominal}', align='C', ln=1)
+    
+    pdf.ln(3)
+    pdf.cell(w=50, h=5, txt=f'{var_coxa}', align='C', ln=1)
+    
+
+    pdf.set_xy(16.5, 118.3)
+    pdf.cell(w=50, h=5, txt=f'{porcentage_gordura_ideal}', align='C', ln=1)    
+    
+    pdf.ln(3)
+    pdf.cell(w=65, h=5, txt=f'{var_porcentagem_gordura}', align='C', ln=1)    
+    
+    pdf.ln(3)
+    pdf.cell(w=65, h=5, txt=f'{var_massaMagra}', align='C', ln=1)    
+    
+    pdf.ln(3)
+    pdf.cell(w=65, h=5, txt=f'{var_massaGorda}', align='C', ln=1)    
+
+    pdf.ln(15)
+    pdf.image(f'{dir_figures}/fig_circleMassa_Magra_Gorda.png', x=8, y=150, w=WIDTH/4-3)
+
+
+def create_report(date=DATE, filename='../report.pdf'):
 
 
     pdf = FPDF() # Objeto PDF, as propriedades podem ser ajustadas em PDF()
@@ -83,26 +101,25 @@ def create_report(date=DATE, filename='report.pdf'):
     create_second_page(pdf=pdf, data=df)
 
     name = "Bruno"
-    #Third Page
-    '''
-    pdf.add_page()
+    '''Third Page'''
+    '''pdf.add_page()
     
     
     pdf.cell(40, 10, f'Avaliação Física de {name} em Perspectiva Gráfica: Insights e Conclusões')
     
     # Realizando ajuste de tamanho da imagem/localização
-    pdf.image(f'{dir_figures}/fig_evolucaoPeso.png', x=5, y=30, w=WIDTH/2-5)
+    pdf.image(f'{dir_figures}/fig_evolucaoPeso.png', x=5, y=22.5, w=WIDTH/2-5)
 
     # Simulando uma segunda imagem 
-    pdf.image(f'{dir_figures}/fig_evolucaoPeso.png', x=WIDTH/2-5, y=30, w=WIDTH/2-5)
+    pdf.image(f'{dir_figures}/fig_evolucaoPeso.png', x=WIDTH/2-5, y=22.5, w=WIDTH/2-5)
     '''
 
     '''Fourth Page'''
     pdf.add_page()
 
-    pdf.cell(h=40, w=10, txt=f'Avaliação Física de {name} em Perspectiva Gráfica: Insights e Conclusões', )
-    pdf.image(f'{dir_figures}/fig_table.png', x=5, y=100, w=WIDTH-5)
-
+    pdf.cell(h=30, w=10, txt=f'Avaliação Física de {name} em Perspectiva Gráfica: Insights e Conclusões', )
+    pdf.image(f'{dir_figures}/fig_table.png', x=5, y=30, w=WIDTH-5)
+    
 
     pdf.output(filename, 'F')
 
@@ -110,6 +127,4 @@ def create_report(date=DATE, filename='report.pdf'):
 if __name__ == '__main__':
     create_report()
 
-#Pegar o Nome da última posição do dataframe
-# nome = data['Nome'].iloc[-1]
 # %%
